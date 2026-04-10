@@ -96,6 +96,49 @@ open the following ports for inbound traffic:
 | 22 | TCP/SSH | SSH access for installation and management |
 | 80 | TCP/HTTP | Portal (redirects to HTTPS) |
 | 443 | TCP/HTTPS | Portal |
+
+---
+
+## 3a. TLS certificate (required)
+
+portal requires a TLS certificate for HTTPS. customer must supply their own
+certificate (signed by an internal or public CA) covering the portal hostname.
+
+### required files
+
+place the following files on the server **before running the install script**:
+
+| File | Description |
+|------|-------------|
+| `/home/<deploy-user>/portal-cert/fullchain.pem` | full certificate chain (server cert + intermediates) |
+| `/home/<deploy-user>/portal-cert/privkey.pem` | private key (PEM format, no passphrase) |
+
+permissions:
+
+```bash
+chmod 600 /home/<deploy-user>/portal-cert/privkey.pem
+chmod 644 /home/<deploy-user>/portal-cert/fullchain.pem
+chown -R <deploy-user>:<deploy-user> /home/<deploy-user>/portal-cert
+```
+
+### verify
+
+```bash
+# certificate is valid
+openssl x509 -in /home/<deploy-user>/portal-cert/fullchain.pem -noout -dates
+
+# private key matches certificate
+diff <(openssl x509 -in /home/<deploy-user>/portal-cert/fullchain.pem -noout -modulus) \
+     <(openssl rsa -in /home/<deploy-user>/portal-cert/privkey.pem -noout -modulus)
+# Expected: no output (matching modulus)
+```
+
+### notes
+
+- self-signed certificates are accepted but browsers will show a warning
+- if the certificate covers multiple domains (SAN), all of them must point to this server
+- expired certificates will block portal HTTPS access -- monitor expiration
+
 ---
 
 ## 4. outbound network access
