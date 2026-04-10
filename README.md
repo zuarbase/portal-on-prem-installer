@@ -38,7 +38,9 @@ df -h /
 
 ## 2. user setup
 
-create a user named `ubuntu` with **UID 1000** and passwordless sudo.
+create a user with **UID 1000** and passwordless sudo. the username can be
+anything -- below we use `<deploy-user>` as a placeholder. zuar will use the
+actual name in the install command.
 
 **why UID 1000?** portal docker containers run internal processes as UID 1000.
 docker volume mounts share file ownership between host and container -- if the
@@ -49,40 +51,40 @@ certs, app data, and nginx config directories.
 
 ```bash
 # As root:
-useradd -m -s /bin/bash -u 1000 ubuntu
-passwd ubuntu
+useradd -m -s /bin/bash -u 1000 <deploy-user>
+passwd <deploy-user>
 # (set a password for SSH access)
 ```
 
 ### configure passwordless sudo
 
 ```bash
-echo "ubuntu ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/ubuntu
-chmod 440 /etc/sudoers.d/ubuntu
+echo "<deploy-user> ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/<deploy-user>
+chmod 440 /etc/sudoers.d/<deploy-user>
 ```
 
 ### configure SSH access for zuar
 
 ```bash
-mkdir -p /home/ubuntu/.ssh
+mkdir -p /home/<deploy-user>/.ssh
 # Zuar will provide the public key separately
-echo "<ZUAR_PUBLIC_KEY>" >> /home/ubuntu/.ssh/authorized_keys
-chown -R ubuntu:ubuntu /home/ubuntu/.ssh
-chmod 700 /home/ubuntu/.ssh
-chmod 600 /home/ubuntu/.ssh/authorized_keys
+echo "<ZUAR_PUBLIC_KEY>" >> /home/<deploy-user>/.ssh/authorized_keys
+chown -R <deploy-user>:<deploy-user> /home/<deploy-user>/.ssh
+chmod 700 /home/<deploy-user>/.ssh
+chmod 600 /home/<deploy-user>/.ssh/authorized_keys
 ```
 
 ### verify
 
 ```bash
-id ubuntu
-# Expected: uid=1000(ubuntu) gid=1000(ubuntu) groups=1000(ubuntu),sudo
+id <deploy-user>
+# Expected: uid=1000(<deploy-user>) gid=1000(<deploy-user>) groups=1000(<deploy-user>),sudo
 
-sudo -u ubuntu sudo whoami
+sudo -u <deploy-user> sudo whoami
 # Expected: root (confirms passwordless sudo works)
 
-ssh ubuntu@localhost whoami
-# Expected: ubuntu
+ssh <deploy-user>@localhost whoami
+# Expected: <deploy-user>
 ```
 
 ---
@@ -202,7 +204,7 @@ once the server meets requirements above, a zuar engineer will provide a
 single command to run on the server. the command looks like:
 
 ```bash
-curl -sL https://raw.githubusercontent.com/zuarbase/portal-on-prem-installer/main/install-portal.sh | sudo bash -s -- --token <install-token> --gist-url https://raw.githubusercontent.com/zuarbase/portal-on-prem-installer/main/install-portal.sh
+curl -sL https://raw.githubusercontent.com/zuarbase/portal-on-prem-installer/main/install-portal.sh | sudo bash -s -- --token <install-token> --gist-url https://raw.githubusercontent.com/zuarbase/portal-on-prem-installer/main/install-portal.sh --user <deploy-user>
 ```
 
 the `<install-token>` is unique to your deployment:
@@ -210,28 +212,7 @@ the `<install-token>` is unique to your deployment:
 - valid for 14 days
 - contains no permanent credentials
 
-if your UID 1000 user is not named `ubuntu`, add `--user <username>`:
-
-```bash
-curl -sL https://raw.githubusercontent.com/zuarbase/portal-on-prem-installer/main/install-portal.sh | sudo bash -s -- --token <install-token> --gist-url https://raw.githubusercontent.com/zuarbase/portal-on-prem-installer/main/install-portal.sh --user deploy
-```
-
-the script will automatically:
-1. install all required packages (Docker, Git, Vault, AWS CLI, etc.)
-2. fetch credentials from zuar vault
-3. create license user and instance
-4. clone and configure portal
-5. restore default database content
-6. create admin user
-
 after completion, the script outputs the portal URL and admin credentials.
-
-### upgrade
-
-```bash
-cd ~/portal-docker-setup/setup
-./make.sh upgrade
-```
 
 ---
 
@@ -369,9 +350,9 @@ dig +short portal.customer.com
 
 ## summary checklist
 
-- [ ] ubuntu 22.04 LTS, 2 vCPU, 4 GB RAM, 80 GB disk, x86_64
-- [ ] user `ubuntu` with UID 1000, passwordless sudo
-- [ ] SSH access for zuar (public key added to `ubuntu`)
+- [ ] Ubuntu 22.04 LTS, 2 vCPU, 4 GB RAM, 80 GB disk, x86_64
+- [ ] `<deploy-user>` with UID 1000, passwordless sudo
+- [ ] SSH access for zuar (public key added to `<deploy-user>`)
 - [ ] inbound ports open: 22, 80, 443
 - [ ] outbound access to: github.com, AWS ECR, vault.zuarbase.net, Docker/HashiCorp/Microsoft APT repos, astral.sh
 - [ ] DNS A record for custom domain (if applicable)
