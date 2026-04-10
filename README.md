@@ -1,7 +1,7 @@
-# on-prem portal installation -- customer server preparation runbook
+# on-prem portal installation -- customer server preparation instructions
 
 steps the customer must complete on their server before zuar runs the portal
-install script. this runbook is shared with the customer directly.
+install script. these instructions are shared with the customer directly.
 
 ---
 
