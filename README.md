@@ -204,13 +204,14 @@ once the server meets requirements above, a zuar engineer will provide a
 single command to run on the server. the command looks like:
 
 ```bash
-curl -sL https://raw.githubusercontent.com/zuarbase/portal-on-prem-installer/main/install-portal.sh | sudo bash -s -- --token <install-token> --gist-url https://raw.githubusercontent.com/zuarbase/portal-on-prem-installer/main/install-portal.sh --user <deploy-user>
+curl -sL https://raw.githubusercontent.com/zuarbase/portal-on-prem-installer/main/install-portal.sh | sudo bash -s -- --token <install-token> --gist-url https://raw.githubusercontent.com/zuarbase/portal-on-prem-installer/main/install-portal.sh --user <deploy-user> --tls-cert
 ```
 
-the `<install-token>` is unique to your deployment:
-- one-time use (destroyed after first use)
-- valid for 14 days
-- contains no permanent credentials
+flags:
+- `--token` -- one-time install token (provided by zuar, valid 14 days)
+- `--gist-url` -- script source url (provided by zuar)
+- `--user <deploy-user>` -- the UID 1000 user created in step 2
+- `--tls-cert` -- include only if you supplied a certificate in step 3a
 
 after completion, the script outputs the portal URL and admin credentials.
 
