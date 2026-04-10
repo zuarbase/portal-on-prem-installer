@@ -347,15 +347,19 @@ preflight() {
   fi
   log "  OS: Ubuntu $OS_VERSION"
 
-  # TLS certificate check -- customer must supply cert at ~<deploy-user>/portal-cert/
-  DEPLOY_HOME=$(eval echo "~$DEPLOY_USER")
-  CERT_DIR="$DEPLOY_HOME/portal-cert"
-  CERT_FILE="$CERT_DIR/fullchain.pem"
-  KEY_FILE="$CERT_DIR/privkey.pem"
-  if [ ! -f "$CERT_FILE" ] || [ ! -f "$KEY_FILE" ]; then
-    fail "TLS certificate not found at $CERT_DIR -- need fullchain.pem and privkey.pem (see README)"
+  # TLS certificate check (only if --tls-cert flag was set)
+  if [ "${TLS_CERT_REQUIRED:-false}" = "true" ]; then
+    DEPLOY_HOME=$(eval echo "~$DEPLOY_USER")
+    CERT_DIR="$DEPLOY_HOME/portal-cert"
+    CERT_FILE="$CERT_DIR/fullchain.pem"
+    KEY_FILE="$CERT_DIR/privkey.pem"
+    if [ ! -f "$CERT_FILE" ] || [ ! -f "$KEY_FILE" ]; then
+      fail "TLS certificate not found at $CERT_DIR -- need fullchain.pem and privkey.pem (see README)"
+    fi
+    log "  TLS certificate: $CERT_DIR"
+  else
+    log "  TLS certificate: not required (using self-signed snakeoil)"
   fi
-  log "  TLS certificate: $CERT_DIR"
 
   # Check pre-installed packages (standard Ubuntu Server, needed before any install step)
   for cmd in curl wget openssl gpg ssh ssh-keyscan tar gzip; do
@@ -848,7 +852,7 @@ ensure_deploy_user() {
   # Re-run this script as deploy user
   log "  Switching to $DEPLOY_USER user..."
   echo ""
-  exec $SUDO su - "$DEPLOY_USER" -c "cd $USER_INSTALL_DIR && DEPLOY_USER=$DEPLOY_USER ./install-portal.sh --as-user"
+  exec $SUDO su - "$DEPLOY_USER" -c "cd $USER_INSTALL_DIR && DEPLOY_USER=$DEPLOY_USER TLS_CERT_REQUIRED=${TLS_CERT_REQUIRED:-false} ./install-portal.sh --as-user"
 }
 
 # ===========================================================================
@@ -875,7 +879,9 @@ main() {
   setup_github
   clone_and_configure
   install_portal
-  install_tls_cert
+  if [ "${TLS_CERT_REQUIRED:-false}" = "true" ]; then
+    install_tls_cert
+  fi
   restore_backup
   create_admin
   verify
@@ -906,7 +912,9 @@ if [ "${1:-}" = "--as-user" ]; then
   setup_github
   clone_and_configure
   install_portal
-  install_tls_cert
+  if [ "${TLS_CERT_REQUIRED:-false}" = "true" ]; then
+    install_tls_cert
+  fi
   restore_backup
   create_admin
   verify
@@ -917,6 +925,7 @@ else
       --token) WRAP_TOKEN="$2"; shift 2 ;;
       --user) DEPLOY_USER="$2"; shift 2 ;;
       --gist-url) INSTALL_GIST_URL="$2"; shift 2 ;;
+      --tls-cert) TLS_CERT_REQUIRED="true"; shift ;;
       *) shift ;;
     esac
   done

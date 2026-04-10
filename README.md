@@ -99,12 +99,17 @@ open the following ports for inbound traffic:
 
 ---
 
-## 3a. TLS certificate (required)
+## 3a. TLS certificate (optional)
 
-portal requires a TLS certificate for HTTPS. customer must supply their own
-certificate (signed by an internal or public CA) covering the portal hostname.
+portal serves over HTTPS. by default, it uses a self-signed certificate
+("snakeoil") -- HTTPS works but browsers show an "untrusted certificate"
+warning. for production deployments, supply your own CA-signed certificate.
 
-### required files
+if a customer-supplied certificate is needed, the install command will include
+the `--tls-cert` flag. without that flag, the server uses snakeoil and this
+section can be skipped.
+
+### required files (only if `--tls-cert` is used)
 
 place the following files on the server **before running the install script**:
 
