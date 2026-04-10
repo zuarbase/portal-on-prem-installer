@@ -347,6 +347,16 @@ preflight() {
   fi
   log "  OS: Ubuntu $OS_VERSION"
 
+  # TLS certificate check -- customer must supply cert at ~<deploy-user>/portal-cert/
+  DEPLOY_HOME=$(eval echo "~$DEPLOY_USER")
+  CERT_DIR="$DEPLOY_HOME/portal-cert"
+  CERT_FILE="$CERT_DIR/fullchain.pem"
+  KEY_FILE="$CERT_DIR/privkey.pem"
+  if [ ! -f "$CERT_FILE" ] || [ ! -f "$KEY_FILE" ]; then
+    fail "TLS certificate not found at $CERT_DIR -- need fullchain.pem and privkey.pem (see README)"
+  fi
+  log "  TLS certificate: $CERT_DIR"
+
   # Check pre-installed packages (standard Ubuntu Server, needed before any install step)
   for cmd in curl wget openssl gpg ssh ssh-keyscan tar gzip; do
     if command -v $cmd > /dev/null 2>&1; then
@@ -621,6 +631,38 @@ install_portal() {
 }
 
 # ===========================================================================
+# Phase 3a: Install TLS certificate
+# ===========================================================================
+install_tls_cert() {
+  log "=== Phase 3a: Installing TLS certificate ==="
+
+  DEPLOY_HOME=$(eval echo "~$DEPLOY_USER")
+  CERT_DIR="$DEPLOY_HOME/portal-cert"
+  CERT_FILE="$CERT_DIR/fullchain.pem"
+  KEY_FILE="$CERT_DIR/privkey.pem"
+
+  if [ ! -f "$CERT_FILE" ] || [ ! -f "$KEY_FILE" ]; then
+    fail "TLS certificate not found at $CERT_DIR"
+  fi
+
+  SSL_DIR="$HOME/portal-docker-setup/for_mounting/ssl/live/$HOSTNAME"
+  mkdir -p "$SSL_DIR"
+  cp "$CERT_FILE" "$SSL_DIR/fullchain.pem"
+  cp "$KEY_FILE" "$SSL_DIR/privkey.pem"
+  chmod 644 "$SSL_DIR/fullchain.pem"
+  chmod 600 "$SSL_DIR/privkey.pem"
+  log "  Cert copied to $SSL_DIR"
+
+  cd "$HOME/portal-docker-setup/setup"
+  ./make.sh change_nginx_ssl_links \
+    "live/$HOSTNAME/fullchain.pem" \
+    "live/$HOSTNAME/privkey.pem" 2>&1 | tee -a "$LOG_FILE"
+
+  log "  TLS certificate installed"
+  echo ""
+}
+
+# ===========================================================================
 # Phase 4: Restore database backup (default content)
 # ===========================================================================
 restore_backup() {
@@ -833,6 +875,7 @@ main() {
   setup_github
   clone_and_configure
   install_portal
+  install_tls_cert
   restore_backup
   create_admin
   verify
@@ -863,6 +906,7 @@ if [ "${1:-}" = "--as-user" ]; then
   setup_github
   clone_and_configure
   install_portal
+  install_tls_cert
   restore_backup
   create_admin
   verify
