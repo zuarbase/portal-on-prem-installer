@@ -181,12 +181,6 @@ for host in github.com 575296055612.dkr.ecr.us-east-1.amazonaws.com vault.zuarba
   fi
 done
 
-# SSH to GitHub
-if ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 -T git@github.com 2>&1 | grep -qi "successfully\|denied"; then
-  pass "github.com:22 (SSH)"
-else
-  warn "github.com:22 (SSH) -- could not verify"
-fi
 echo ""
 
 # =========================================================================
