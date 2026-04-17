@@ -66,7 +66,7 @@ echo "<deploy-user> ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/<deploy-user>
 chmod 440 /etc/sudoers.d/<deploy-user>
 ```
 
-### configure SSH access for zuar
+### configure SSH access for zuar (If that is acceptable)
 
 ```bash
 mkdir -p /home/<deploy-user>/.ssh
@@ -181,14 +181,14 @@ for host in github.com 575296055612.dkr.ecr.us-east-1.amazonaws.com vault.zuarba
 done
 
 # Expected output (any 2xx/3xx/4xx means reachable, 000 means blocked):
-#   github.com                                              301
-#   575296055612.dkr.ecr.us-east-1.amazonaws.com            403
-#   vault.zuarbase.net:8200                                 400
+#   github.com                                              200-301
+#   575296055612.dkr.ecr.us-east-1.amazonaws.com            401-403
+#   vault.zuarbase.net:8200                                 307-400
 #   download.docker.com                                     200
 #   apt.releases.hashicorp.com                              200
-#   awscli.amazonaws.com                                    403
+#   awscli.amazonaws.com                                    301-403
 #   packages.microsoft.com                                  200
-#   astral.sh                                               301
+#   astral.sh                                               200-301
 
 # Test SSH to GitHub (port 22):
 ssh -T git@github.com 2>&1 | head -1
