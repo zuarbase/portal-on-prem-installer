@@ -337,38 +337,37 @@ preflight() {
     log "  Token mode -- credentials will be fetched from Vault"
   fi
 
-  # OS check -- only Ubuntu 22.04 (jammy) is supported
-  if ! lsb_release -d 2>/dev/null | grep -qi "ubuntu"; then
-    fail "Not Ubuntu -- only Ubuntu 22.04 LTS is supported"
+  # Run requirements check (reuse check-requirements.sh)
+  log "  Running requirements check..."
+  CHECK_SCRIPT="$SCRIPT_DIR/check-requirements.sh"
+  if [ ! -f "$CHECK_SCRIPT" ] && [ -n "${INSTALL_GIST_URL:-}" ]; then
+    CHECK_URL=$(echo "$INSTALL_GIST_URL" | sed 's|install-portal.sh|check-requirements.sh|')
+    curl -sfSL -o /tmp/check-requirements.sh "$CHECK_URL" 2>/dev/null || true
+    CHECK_SCRIPT="/tmp/check-requirements.sh"
   fi
-  OS_VERSION=$(lsb_release -rs)
-  if [ "$OS_VERSION" != "22.04" ]; then
-    fail "Ubuntu $OS_VERSION is not supported. Only Ubuntu 22.04 LTS (jammy)."
-  fi
-  log "  OS: Ubuntu $OS_VERSION"
-
-  # TLS certificate check (only if --tls-cert flag was set)
-  if [ "${TLS_CERT_REQUIRED:-false}" = "true" ]; then
-    DEPLOY_HOME=$(eval echo "~$DEPLOY_USER")
-    CERT_DIR="$DEPLOY_HOME/portal-cert"
-    CERT_FILE="$CERT_DIR/fullchain.pem"
-    KEY_FILE="$CERT_DIR/privkey.pem"
-    if [ ! -f "$CERT_FILE" ] || [ ! -f "$KEY_FILE" ]; then
-      fail "TLS certificate not found at $CERT_DIR -- need fullchain.pem and privkey.pem (see README)"
+  if [ -f "$CHECK_SCRIPT" ]; then
+    CHECK_ARGS="--user $DEPLOY_USER"
+    if [ "${TLS_CERT_REQUIRED:-false}" = "true" ]; then
+      CHECK_ARGS="$CHECK_ARGS --tls-cert"
     fi
-    log "  TLS certificate: $CERT_DIR"
+    bash "$CHECK_SCRIPT" $CHECK_ARGS || fail "Requirements check failed"
   else
-    log "  TLS certificate: not required (using self-signed snakeoil)"
-  fi
-
-  # Check pre-installed packages (standard Ubuntu Server, needed before any install step)
-  for cmd in curl wget openssl gpg ssh ssh-keyscan tar gzip; do
-    if command -v $cmd > /dev/null 2>&1; then
-      log "  $cmd: OK"
-    else
-      fail "$cmd not found. Install it first: apt-get install -y $cmd"
+    log "  check-requirements.sh not found, running inline checks..."
+    # Inline fallback checks
+    if ! lsb_release -d 2>/dev/null | grep -qi "ubuntu"; then
+      fail "Not Ubuntu -- only Ubuntu 22.04 LTS is supported"
     fi
-  done
+    OS_VERSION=$(lsb_release -rs)
+    if [ "$OS_VERSION" != "22.04" ]; then
+      fail "Ubuntu $OS_VERSION is not supported. Only Ubuntu 22.04 LTS (jammy)."
+    fi
+    log "  OS: Ubuntu $OS_VERSION"
+    for cmd in curl wget openssl gpg ssh ssh-keyscan tar gzip; do
+      if ! command -v $cmd > /dev/null 2>&1; then
+        fail "$cmd not found"
+      fi
+    done
+  fi
 
   # Use sudo if not root
   if [ "$(id -u)" = "0" ]; then
@@ -737,6 +736,36 @@ verify() {
   else
     warn "  Portal HTTPS returned $HTTP_CODE (may need DNS/cert setup)"
   fi
+
+  # Verify installed packages
+  log ""
+  log "  --- Core packages ---"
+  for pkg_cmd in "docker:docker --version" "docker compose:docker compose version --short" "git:git --version" "vault:vault --version" "aws:aws --version" "uv:uv --version"; do
+    pkg_name="${pkg_cmd%%:*}"
+    pkg_check="${pkg_cmd#*:}"
+    pkg_ver=$($pkg_check 2>/dev/null | head -1 || echo "NOT FOUND")
+    log "    $pkg_name: $pkg_ver"
+  done
+
+  log ""
+  log "  --- Tools ---"
+  for cmd in jq rg gron ncdu icdiff nmap emacs pv psql /opt/mssql-tools18/bin/sqlcmd pass; do
+    if command -v $cmd > /dev/null 2>&1; then
+      log "    $cmd: OK"
+    else
+      warn "    $cmd: MISSING"
+    fi
+  done
+
+  log ""
+  log "  --- System packages ---"
+  for cmd in curl wget openssl gpg ssh ssh-keyscan sudo tar gzip lsb_release unzip zip; do
+    if command -v $cmd > /dev/null 2>&1; then
+      log "    $cmd: OK"
+    else
+      warn "    $cmd: MISSING"
+    fi
+  done
 
   echo ""
   log "========================================="
