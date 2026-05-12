@@ -489,6 +489,7 @@ preflight() {
   if ! command -v sqlcmd > /dev/null 2>&1; then
     log "  Installing MSSQL tools + ODBC..."
     curl -s https://packages.microsoft.com/keys/microsoft.asc | $SUDO tee /etc/apt/trusted.gpg.d/microsoft.asc > /dev/null
+    $SUDO chmod 644 /etc/apt/trusted.gpg.d/microsoft.asc
     curl -s https://packages.microsoft.com/config/ubuntu/22.04/prod.list | $SUDO tee /etc/apt/sources.list.d/mssql-release.list > /dev/null
     $SUDO apt-get update -qq
     export ACCEPT_EULA=Y
