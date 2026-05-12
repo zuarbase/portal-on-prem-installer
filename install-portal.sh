@@ -489,6 +489,7 @@ preflight() {
   if ! command -v sqlcmd > /dev/null 2>&1; then
     log "  Installing MSSQL tools + ODBC..."
     curl -s https://packages.microsoft.com/keys/microsoft.asc | $SUDO tee /etc/apt/trusted.gpg.d/microsoft.asc > /dev/null
+    $SUDO chmod 644 /etc/apt/trusted.gpg.d/microsoft.asc
     curl -s https://packages.microsoft.com/config/ubuntu/22.04/prod.list | $SUDO tee /etc/apt/sources.list.d/mssql-release.list > /dev/null
     $SUDO apt-get update -qq
     export ACCEPT_EULA=Y
@@ -502,6 +503,7 @@ preflight() {
   if ! vault --version > /dev/null 2>&1; then
     log "  Vault not found, installing..."
     curl -fsSL https://apt.releases.hashicorp.com/gpg | $SUDO gpg --dearmor -o /usr/share/keyrings/hashicorp.gpg
+    $SUDO chmod 644 /usr/share/keyrings/hashicorp.gpg
     echo "deb [signed-by=/usr/share/keyrings/hashicorp.gpg] https://apt.releases.hashicorp.com jammy main" | $SUDO tee /etc/apt/sources.list.d/hashicorp.list > /dev/null
     $SUDO apt-get update -qq
     $SUDO apt-get install -y -qq vault=1.18.4-1
