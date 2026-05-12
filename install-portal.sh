@@ -449,16 +449,32 @@ preflight() {
   # Git
   if ! git --version > /dev/null 2>&1; then
     log "  Git not found, installing..."
-    $SUDO apt-get install -y -qq git=1:2.34.1-1ubuntu1.11
-    log "  Git installed: 2.34.1"
+    GIT_VER="1:2.34.1-1ubuntu1.11"
+    if apt-cache show "git=$GIT_VER" > /dev/null 2>&1; then
+      $SUDO apt-get install -y -qq "git=$GIT_VER"
+    else
+      log "  git=$GIT_VER not in apt cache, installing latest available..."
+      $SUDO apt-get install -y -qq git
+    fi
+    log "  Git installed: $(git --version | awk '{print $3}')"
   else
     log "  Git: $(git --version | awk '{print $3}')"
   fi
 
   # Tools: jq, ripgrep, gron, ncdu, icdiff, nmap, emacs-nox, net-tools, pv, postgresql-client
   log "  Installing tools..."
-  $SUDO apt-get install -y -qq \
-    jq=1.6-2.1ubuntu3.1 ripgrep gron ncdu icdiff nmap emacs-nox net-tools pv postgresql-client
+  JQ_VER="1.6-2.1ubuntu3.1"
+  TOOLS_PKGS=(ripgrep gron ncdu icdiff nmap emacs-nox net-tools pv postgresql-client)
+  if apt-cache show "jq=$JQ_VER" > /dev/null 2>&1; then
+    TOOLS_PKGS=("jq=$JQ_VER" "${TOOLS_PKGS[@]}")
+  else
+    log "  jq=$JQ_VER not in apt cache, fetching .deb from Ubuntu archive..."
+    curl -sL "http://archive.ubuntu.com/ubuntu/pool/main/j/jq/libjq1_${JQ_VER}_amd64.deb" -o /tmp/libjq1.deb
+    curl -sL "http://archive.ubuntu.com/ubuntu/pool/main/j/jq/jq_${JQ_VER}_amd64.deb" -o /tmp/jq.deb
+    $SUDO dpkg -i /tmp/libjq1.deb /tmp/jq.deb
+    rm -f /tmp/libjq1.deb /tmp/jq.deb
+  fi
+  $SUDO apt-get install -y -qq "${TOOLS_PKGS[@]}"
 
   # uv (Python package manager)
   if ! command -v uv > /dev/null 2>&1; then
