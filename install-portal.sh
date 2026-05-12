@@ -463,7 +463,7 @@ preflight() {
 
   # Tools: jq, ripgrep, gron, ncdu, icdiff, nmap, emacs-nox, net-tools, pv, postgresql-client
   log "  Installing tools..."
-  JQ_VER="1.6-2.1ubuntu3.1"
+  JQ_VER="1.6-2.1ubuntu3.2"
   TOOLS_PKGS=(ripgrep gron ncdu icdiff nmap emacs-nox net-tools pv postgresql-client)
   if apt-cache show "jq=$JQ_VER" > /dev/null 2>&1; then
     TOOLS_PKGS=("jq=$JQ_VER" "${TOOLS_PKGS[@]}")
