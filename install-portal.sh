@@ -875,7 +875,7 @@ ensure_deploy_user() {
   if ! grep -q "VAULT_ADDR" "$USER_PROFILE" 2>/dev/null; then
     echo 'export VAULT_ADDR=https://vault.zuarbase.net:8200' | $SUDO tee -a "$USER_PROFILE" > /dev/null
     echo 'export AWS_DEFAULT_REGION=us-east-1' | $SUDO tee -a "$USER_PROFILE" > /dev/null
-    echo 'export PATH="$PATH:/opt/mssql-tools18/bin"' | $SUDO tee -a "$USER_PROFILE" > /dev/null
+    echo 'export PATH="$PATH:/usr/local/bin:/opt/mssql-tools18/bin"' | $SUDO tee -a "$USER_PROFILE" > /dev/null
     echo 'export HISTCONTROL=ignoreboth HISTTIMEFORMAT="%y-%m-%d %T "' | $SUDO tee -a "$USER_PROFILE" > /dev/null
     echo 'export IGNOREEOF=10' | $SUDO tee -a "$USER_PROFILE" > /dev/null
     echo 'alias docker-compose="docker compose"' | $SUDO tee -a "$USER_PROFILE" > /dev/null
