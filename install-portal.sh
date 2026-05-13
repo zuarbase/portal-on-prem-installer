@@ -883,6 +883,13 @@ ensure_deploy_user() {
     log "  Environment variables added to $DEPLOY_USER .profile"
   fi
 
+  # Ensure /usr/local/bin is in PATH even if profile was written by an older installer run
+  if ! grep -q "usr/local/bin" "$USER_PROFILE" 2>/dev/null; then
+    echo 'export PATH="$PATH:/usr/local/bin"' | $SUDO tee -a "$USER_PROFILE" > /dev/null
+    $SUDO chown "$DEPLOY_USER:$DEPLOY_USER" "$USER_PROFILE"
+    log "  Added /usr/local/bin to $DEPLOY_USER PATH"
+  fi
+
   # Copy install data to deploy user home
   USER_INSTALL_DIR="$DEPLOY_HOME/portal-install"
   $SUDO mkdir -p "$USER_INSTALL_DIR"
