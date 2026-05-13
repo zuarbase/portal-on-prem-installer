@@ -410,6 +410,17 @@ preflight() {
 
   export DEBIAN_FRONTEND=noninteractive
 
+  # Repair apt keyring file permissions if left from a previous run.
+  # gpg --dearmor and tee can write files with umask-restricted perms (e.g. 600),
+  # which causes _apt to ignore the keyring and fail signature verification on every
+  # subsequent apt-get update -- even for unrelated repos.
+  for _kf in \
+      /etc/apt/trusted.gpg.d/microsoft.asc \
+      /usr/share/keyrings/hashicorp.gpg \
+      /etc/apt/keyrings/docker.gpg; do
+    [ -f "$_kf" ] && $SUDO chmod 644 "$_kf"
+  done
+
   # Base packages (pass needed for docker credential store, gnupg2 for key mgmt)
   log "  Installing base packages..."
   $SUDO apt-get update -qq
