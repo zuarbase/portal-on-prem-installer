@@ -656,6 +656,7 @@ install_portal() {
   cd "$HOME/portal-docker-setup/setup"
   export VAULT_ADDR="${VAULT_ADDR:-https://vault.zuarbase.net:8200}"
   export AWS_DEFAULT_REGION=us-east-1
+  export PATH="$PATH:/usr/local/bin"
   ./make.sh install 2>&1 | tee -a "$LOG_FILE"
 
   log "  Portal installed"
