@@ -524,15 +524,17 @@ preflight() {
   fi
 
   # AWS CLI
-  if ! aws --version > /dev/null 2>&1; then
-    log "  AWS CLI not found, installing..."
-    curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-2.24.4.zip" -o /tmp/awscliv2.zip
+  _REQUIRED_AWS="2.24.4"
+  _CURRENT_AWS=$(/usr/local/bin/aws --version 2>/dev/null | grep -oP '\d+\.\d+\.\d+' | head -1)
+  if [ ! -f /usr/local/bin/aws ] || [ "$_CURRENT_AWS" != "$_REQUIRED_AWS" ]; then
+    log "  Installing AWS CLI $_REQUIRED_AWS..."
+    curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-${_REQUIRED_AWS}.zip" -o /tmp/awscliv2.zip
     unzip -q /tmp/awscliv2.zip -d /tmp
-    $SUDO /tmp/aws/install
+    $SUDO /tmp/aws/install --update
     rm -rf /tmp/aws /tmp/awscliv2.zip
-    log "  AWS CLI installed: 2.24.4"
+    log "  AWS CLI installed: $_REQUIRED_AWS"
   else
-    log "  AWS CLI: $(aws --version | awk '{print $1}')"
+    log "  AWS CLI: $_REQUIRED_AWS"
   fi
 
   # Outbound connectivity
