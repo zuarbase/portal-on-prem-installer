@@ -423,7 +423,7 @@ preflight() {
 
   # Base packages (pass needed for docker credential store, gnupg2 for key mgmt)
   log "  Installing base packages..."
-  $SUDO apt-get update -qq
+  $SUDO apt-get update -qq --allow-releaseinfo-change
   $SUDO apt-get install -y -qq \
     apt-transport-https ca-certificates pass gnupg2 lsb-release haveged zip unzip
 
@@ -434,7 +434,7 @@ preflight() {
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | $SUDO gpg --dearmor -o /etc/apt/keyrings/docker.gpg
     $SUDO chmod a+r /etc/apt/keyrings/docker.gpg
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu jammy stable" | $SUDO tee /etc/apt/sources.list.d/docker.list > /dev/null
-    $SUDO apt-get update -qq
+    $SUDO apt-get update -qq --allow-releaseinfo-change
     $SUDO apt-get install -y -qq \
       docker-ce=5:27.5.1-1~ubuntu.22.04~jammy \
       docker-ce-cli=5:27.5.1-1~ubuntu.22.04~jammy \
@@ -502,7 +502,7 @@ preflight() {
     curl -s https://packages.microsoft.com/keys/microsoft.asc | $SUDO tee /etc/apt/trusted.gpg.d/microsoft.asc > /dev/null
     $SUDO chmod 644 /etc/apt/trusted.gpg.d/microsoft.asc
     curl -s https://packages.microsoft.com/config/ubuntu/22.04/prod.list | $SUDO tee /etc/apt/sources.list.d/mssql-release.list > /dev/null
-    $SUDO apt-get update -qq
+    $SUDO apt-get update -qq --allow-releaseinfo-change
     export ACCEPT_EULA=Y
     $SUDO apt-get install -y -qq mssql-tools18 unixodbc-dev
     log "  MSSQL tools installed"
