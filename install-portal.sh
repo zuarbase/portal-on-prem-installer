@@ -516,7 +516,7 @@ preflight() {
     curl -fsSL https://apt.releases.hashicorp.com/gpg | $SUDO gpg --dearmor -o /usr/share/keyrings/hashicorp.gpg
     $SUDO chmod 644 /usr/share/keyrings/hashicorp.gpg
     echo "deb [signed-by=/usr/share/keyrings/hashicorp.gpg] https://apt.releases.hashicorp.com jammy main" | $SUDO tee /etc/apt/sources.list.d/hashicorp.list > /dev/null
-    $SUDO apt-get update -qq
+    $SUDO apt-get update -qq --allow-releaseinfo-change
     $SUDO apt-get install -y -qq vault=1.18.4-1
     log "  Vault installed: 1.18.4"
   else
@@ -536,6 +536,7 @@ preflight() {
   else
     log "  AWS CLI: $_REQUIRED_AWS"
   fi
+  $SUDO chmod 755 /usr/local/bin/aws
 
   # Outbound connectivity
   log "  Checking outbound connectivity..."
