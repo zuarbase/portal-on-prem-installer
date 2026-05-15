@@ -530,12 +530,13 @@ preflight() {
     log "  Installing AWS CLI $_REQUIRED_AWS..."
     curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-${_REQUIRED_AWS}.zip" -o /tmp/awscliv2.zip
     unzip -q /tmp/awscliv2.zip -d /tmp
-    $SUDO /tmp/aws/install --update
+    $SUDO /tmp/aws/install --update --install-dir /usr/local/aws-cli --bin-dir /usr/local/bin
     rm -rf /tmp/aws /tmp/awscliv2.zip
     log "  AWS CLI installed: $_REQUIRED_AWS"
   else
     log "  AWS CLI: $_REQUIRED_AWS"
   fi
+  $SUDO chmod 755 /usr/local/bin/aws
 
   # Outbound connectivity
   log "  Checking outbound connectivity..."
