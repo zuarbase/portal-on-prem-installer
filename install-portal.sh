@@ -528,6 +528,7 @@ preflight() {
   _CURRENT_AWS=$(/usr/local/bin/aws --version 2>/dev/null | grep -oP '\d+\.\d+\.\d+' | head -1) || true
   if [ ! -f /usr/local/bin/aws ] || [ "$_CURRENT_AWS" != "$_REQUIRED_AWS" ]; then
     log "  Installing AWS CLI $_REQUIRED_AWS..."
+    rm -rf /tmp/aws /tmp/awscliv2.zip
     curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-${_REQUIRED_AWS}.zip" -o /tmp/awscliv2.zip
     unzip -q /tmp/awscliv2.zip -d /tmp
     $SUDO /tmp/aws/install --update --install-dir /usr/local/aws-cli --bin-dir /usr/local/bin
