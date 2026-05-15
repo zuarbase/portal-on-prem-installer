@@ -618,14 +618,18 @@ clone_and_configure() {
   PORTAL_BRANCH="${PORTAL_BRANCH:-1.18.x}"
 
   if [ -d "$HOME/portal-docker-setup/.git" ]; then
-    warn "  portal-docker-setup already exists, pulling latest..."
-    cd "$HOME/portal-docker-setup"
-    git fetch origin "$PORTAL_BRANCH":"$PORTAL_BRANCH" 2>/dev/null || true
-    git checkout "$PORTAL_BRANCH" 2>/dev/null || git pull
-    cd "$HOME"
+    CURRENT_REF=$(git -C "$HOME/portal-docker-setup" describe --tags --exact-match 2>/dev/null \
+      || git -C "$HOME/portal-docker-setup" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
+    if [ "$CURRENT_REF" = "$PORTAL_BRANCH" ]; then
+      log "  portal-docker-setup already at $PORTAL_BRANCH, skipping clone"
+    else
+      warn "  portal-docker-setup exists at $CURRENT_REF, re-cloning at $PORTAL_BRANCH..."
+      rm -rf "$HOME/portal-docker-setup"
+      cd "$HOME"
+      git clone -b "$PORTAL_BRANCH" git@github.com:zuarbase/portal-docker-setup.git
+    fi
   else
-    rm -rf "$HOME/portal-docker-setup"
-    log "  Cloning portal-docker-setup (branch: $PORTAL_BRANCH)..."
+    log "  Cloning portal-docker-setup (ref: $PORTAL_BRANCH)..."
     cd "$HOME"
     git clone -b "$PORTAL_BRANCH" git@github.com:zuarbase/portal-docker-setup.git
   fi
