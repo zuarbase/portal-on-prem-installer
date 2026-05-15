@@ -536,6 +536,7 @@ preflight() {
   else
     log "  AWS CLI: $_REQUIRED_AWS"
   fi
+  $SUDO chmod 755 /usr/local/bin/aws
 
   # Outbound connectivity
   log "  Checking outbound connectivity..."
