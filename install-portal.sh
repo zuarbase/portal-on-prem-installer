@@ -629,6 +629,7 @@ clone_and_configure() {
       git clone -b "$PORTAL_BRANCH" git@github.com:zuarbase/portal-docker-setup.git
     fi
   else
+    ${SUDO:-} rm -rf "$HOME/portal-docker-setup"
     log "  Cloning portal-docker-setup (ref: $PORTAL_BRANCH)..."
     cd "$HOME"
     git clone -b "$PORTAL_BRANCH" git@github.com:zuarbase/portal-docker-setup.git
