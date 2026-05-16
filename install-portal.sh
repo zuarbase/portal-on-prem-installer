@@ -624,7 +624,7 @@ clone_and_configure() {
       log "  portal-docker-setup already at $PORTAL_BRANCH, skipping clone"
     else
       warn "  portal-docker-setup exists at $CURRENT_REF, re-cloning at $PORTAL_BRANCH..."
-      rm -rf "$HOME/portal-docker-setup"
+      ${SUDO:-} rm -rf "$HOME/portal-docker-setup"
       cd "$HOME"
       git clone -b "$PORTAL_BRANCH" git@github.com:zuarbase/portal-docker-setup.git
     fi
